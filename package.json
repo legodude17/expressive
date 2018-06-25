@@ -23,5 +23,8 @@
     "rollup": "^0.58.2",
     "rollup-plugin-babel": "^3.0.4",
     "rollup-plugin-node-resolve": "^3.3.0"
-  }
+  },
+  "main": "lib/index.js",
+  "bin": {"exp": "lib/cli.js"},
+  "files": ["src/", "lib/"]
 }

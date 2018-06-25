@@ -453,6 +453,15 @@ export default class Tokenizer extends LocationParser {
     this.finishOp(type, width);
   }
 
+  readTokenTilde(code) {
+    if (this.input.charCodeAt(this.state.pos + 1) === code) {
+      this.state.pos += 2;
+      return this.finishToken(tt.truncate, '~~');
+    }
+    this.state.pos++;
+    return this.finishToken(tt.round, '~');
+  }
+
   readTokenPipeAmp(code) {
     // '|&'
     const next = this.input.charCodeAt(this.state.pos + 1);
@@ -768,7 +777,7 @@ export default class Tokenizer extends LocationParser {
       return;
 
     case charCodes.tilde:
-      this.finishOp(tt.tilde, 1);
+      this.readTokenTilde(code);
       return;
 
     default:

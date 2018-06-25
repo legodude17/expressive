@@ -128,6 +128,7 @@ export const types = {
     binop: 11,
     rightAssociative: true
   })
+
 };
 
 export const keywords = {
@@ -151,7 +152,6 @@ export const keywords = {
   let: new KeywordTokenType('let'),
   const: new KeywordTokenType('const'),
   while: new KeywordTokenType('while', { isLoop }),
-  with: new KeywordTokenType('with'),
   new: new KeywordTokenType('new', { beforeExpr, startsExpr }),
   this: new KeywordTokenType('this', { startsExpr }),
   super: new KeywordTokenType('super', { startsExpr }),

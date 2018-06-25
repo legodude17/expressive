@@ -3,9 +3,9 @@ import resolve from 'rollup-plugin-node-resolve';
 import babel from 'rollup-plugin-babel';
 
 export default {
-  input: 'src/index.js',
+  input: ['src/index.js', 'src/cli.js'],
   output: {
-    file: 'lib/bundle.js',
+    dir: 'lib',
     format: 'cjs'
   },
   plugins: [
@@ -13,5 +13,7 @@ export default {
     babel({
       exclude: 'node_modules/**' // only transpile our source code
     })
-  ]
+  ],
+  experimentalCodeSplitting: true,
+  external: ['repl', 'fs', 'vm']
 };

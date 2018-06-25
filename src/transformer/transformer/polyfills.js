@@ -101,7 +101,7 @@ const POLYFILLS = {
     })
   },
   optionalCall: {
-    text: 'function opt__call__(a,b){if(typeof a === "function")return a(...b);return a;}',
+    text: 'function opt__call__(a,b){if(typeof a === "function")return a(...(b()));return a;}',
     build: (callee, args) => ({
       type: 'CallExpression',
       callee: {
@@ -111,14 +111,18 @@ const POLYFILLS = {
       arguments: [
         callee,
         {
-          type: 'ArrayExpression',
-          elements: args
+          type: 'ArrowFunctionExpression',
+          params: [],
+          body: {
+            type: 'ArrayExpression',
+            elements: args
+          }
         }
       ]
     })
   },
   optionalProp: {
-    text: 'function opt__prop__(a,b){if(a==null)return undefined;return a[b];}',
+    text: 'function opt__prop__(a,b){if(a==null)return undefined;return a[b()];}',
     build: (callee, arg) => ({
       type: 'CallExpression',
       callee: {
@@ -127,8 +131,24 @@ const POLYFILLS = {
       },
       arguments: [
         callee,
-        arg
+        {
+          type: 'ArrowFunctionExpression',
+          params: '',
+          body: arg
+        }
       ]
+    })
+  },
+  typeof: {
+    // eslint-disable-next-line max-len
+    text: 'function typeof__(a){return {object:a?Array.isArray(a)&&"array":"null",number:a!==a&&"NaN"}[typeof a] || typeof a}',
+    build: arg => ({
+      type: 'CallExpression',
+      callee: {
+        type: 'Identifier',
+        name: 'typeof__'
+      },
+      arguments: [arg]
     })
   }
 };

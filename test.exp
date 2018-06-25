@@ -1,0 +1,5 @@
+if (a) {
+  foobar();
+} else {
+  barfoo();
+} |> console.log;

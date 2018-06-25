@@ -91,7 +91,7 @@ export default class Expression extends UtilTransformer {
     return this.iterate(node, [], 'ContinueStatement');
   }
   CallExpression(node) {
-    const newNode = this.iterate(node, ['id', 'arguments']);
+    const newNode = this.iterate(node, ['callee', 'arguments']);
     if (newNode.blockParam) {
       newNode.arguments.push(this.walk(newNode.blockParam));
       delete newNode.blockParam;
@@ -178,12 +178,93 @@ export default class Expression extends UtilTransformer {
         arguments: [this.walk(node.left)]
       };
     }
-    return this.iterate(node, ['left', 'right']);
+    if (node.operator === 'in') {
+      return {
+        type: 'CallExpression',
+        callee: {
+          type: 'MemberExpression',
+          object: {
+            type: 'MemberExpression',
+            object: {
+              type: 'MemberExpression',
+              object: {
+                type: 'Identifier',
+                name: 'Object'
+              },
+              property: {
+                type: 'Identifier',
+                name: 'prototype'
+              }
+            },
+            property: {
+              type: 'Identifier',
+              name: 'hasOwnProperty'
+            }
+          },
+          property: {
+            type: 'Identifier',
+            name: 'call'
+          }
+        },
+        arguments: [
+          this.walk(node.right),
+          this.walk(node.left)
+        ]
+      };
+    }
+    const newNode = this.clone(node);
+    if (node.operator === '^') {
+      newNode.operator = '**';
+    }
+    return this.iterate(newNode, ['left', 'right']);
   }
   LogicalExpression(node) {
     return this.iterate(node, ['left', 'right']);
   }
   UnaryExpression(node) {
+    if (node.operator === '~') {
+      return {
+        type: 'CallExpression',
+        callee: {
+          type: 'MemberExpression',
+          object: {
+            type: 'Identifier',
+            name: 'Math'
+          },
+          property: {
+            type: 'Identifier',
+            name: 'round'
+          }
+        },
+        arguments: [this.walk(node.argument)]
+      };
+    }
+    if (node.operator === '~~') {
+      return {
+        type: 'CallExpression',
+        callee: {
+          type: 'Identifier',
+          name: 'parseInt'
+        },
+        arguments: [
+          {
+            type: 'CallExpression',
+            callee: {
+              type: 'MemberExpression',
+              object: this.walk(node.argument),
+              property: {
+                type: 'Identifier',
+                name: 'toString'
+              }
+            },
+            arguments: []
+          }
+        ]
+      };
+    }
+    if (node.operator === 'typeof') {
+      return this.usePolyfill('typeof', this.walk(node.argument));
+    }
     return this.iterate(node, ['argument']);
   }
   Cond(node) {
@@ -438,5 +519,13 @@ export default class Expression extends UtilTransformer {
       },
       arguments: [this.walk(node.object)]
     };
+  }
+  Identifier(node) {
+    if (node.name === 'with') {
+      const newNode = this.clone(node);
+      newNode.name = 'with__';
+      return newNode;
+    }
+    return node;
   }
 }

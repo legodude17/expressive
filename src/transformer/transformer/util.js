@@ -52,6 +52,7 @@ export default class UtilTransformer extends PolyfillTransformer {
   insertReturn(node, map = (_ => _)) {
     const body = node.body || node;
     const last = body.slice(-1)[0];
+    if (!last) return;
     switch (last.type) {
     case 'ExpressionStatement':
       body[body.length - 1] = {

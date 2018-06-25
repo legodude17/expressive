@@ -69,7 +69,7 @@ export default class ExpressionParser extends LValParser {
   // and object pattern might appear (so it's possible to raise
   // delayed syntax error at correct position).
 
-  parseExpression(isStatement = false) {
+  parseExpression(isStatement = false, refShorthandDefaultPos, refNeedsArrowPos) {
     const starttype = this.state.type;
     const node = this.startNode();
     node.isStatement = isStatement;
@@ -122,19 +122,19 @@ export default class ExpressionParser extends LValParser {
     case tt._while:
       return this.parseWhile(node);
     default:
-      return this.parseExpressionNoKeyword();
+      return this.parseExpressionNoKeyword(refShorthandDefaultPos, refNeedsArrowPos);
     }
   }
 
-  parseExpressionNoKeyword(refShorthandDefaultPos) {
+  parseExpressionNoKeyword(refShorthandDefaultPos, refNeedsArrowPos) {
     const startPos = this.state.start;
     const { startLoc } = this.state;
-    const expr = this.parseMaybeAssign(refShorthandDefaultPos);
+    const expr = this.parseMaybeAssign(refShorthandDefaultPos, null, refNeedsArrowPos);
     if (this.match(tt.comma)) {
       const node = this.startNodeAt(startPos, startLoc);
       node.expressions = [expr];
       while (this.eat(tt.comma)) {
-        node.expressions.push(this.parseMaybeAssign(refShorthandDefaultPos));
+        node.expressions.push(this.parseMaybeAssign(refShorthandDefaultPos, null, refNeedsArrowPos));
       }
       return this.finishNode(node, 'SequenceExpression');
     }
@@ -502,9 +502,9 @@ export default class ExpressionParser extends LValParser {
     if (this.eat(tt.question)) {
       const node = this.startNodeAt(startPos, startLoc);
       node.test = expr;
-      node.consequent = this.parseMaybeAssign();
+      node.consequent = this.parseExpression();
       this.expect(tt.colon);
-      node.alternate = this.parseMaybeAssign();
+      node.alternate = this.parseExpression();
       return this.finishNode(node, 'ConditionalExpression');
     }
     return expr;
@@ -546,7 +546,7 @@ export default class ExpressionParser extends LValParser {
     if (this.match(tt.pipeline) && this.state.noPipe) {
       return left;
     }
-    if (prec != null && !this.match(tt._in)) {
+    if (prec != null/* && !this.match(tt._in) */) {
       if (prec > minPrec) {
         const node = this.startNodeAt(leftStartPos, leftStartLoc);
         const operator = this.state.value;
@@ -1225,7 +1225,8 @@ export default class ExpressionParser extends LValParser {
 
         break;
       } else {
-        exprList.push(this.parseMaybeAssign(
+        exprList.push(this.parseExpression(
+          false,
           refShorthandDefaultPos,
           null,
           refNeedsArrowPos,
@@ -1623,7 +1624,7 @@ export default class ExpressionParser extends LValParser {
     if (this.eat(tt.colon)) {
       prop.value = isPattern
         ? this.parseMaybeDefault(this.state.start, this.state.startLoc)
-        : this.parseMaybeAssign(refShorthandDefaultPos);
+        : this.parseExpression(false, refShorthandDefaultPos);
 
       return this.finishNode(prop, 'ObjectProperty');
     }
@@ -1984,7 +1985,7 @@ export default class ExpressionParser extends LValParser {
       node.argument = null;
     } else {
       node.delegate = this.eat(tt.star);
-      node.argument = this.parseMaybeAssign();
+      node.argument = this.parseExpression();
     }
     return this.finishNode(node, 'YieldExpression');
   }

@@ -43,10 +43,9 @@ export default class StatementParser extends ExpressionParser {
         return this.parseImportMetaProperty(node); // TODO: Do acutal thing here
       }
 
-      this.next();
-
       let result;
       if (this.match(tt._import)) {
+        this.next();
         result = this.parseImport(node);
 
         if (
@@ -56,6 +55,7 @@ export default class StatementParser extends ExpressionParser {
           this.sawUnambiguousESM = true;
         }
       } else {
+        this.next();
         result = this.parseExport(node);
 
         if (

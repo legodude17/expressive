@@ -5,7 +5,6 @@ export class Transformer extends ExpressionTransformer {
     super();
     this.ast = ast;
     this.registerHandler('*Literal');
-    this.registerHandler('Identifier');
     this.registerHandler('Export*');
     this.registerHandler('Import*');
   }

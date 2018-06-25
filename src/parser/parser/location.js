@@ -24,7 +24,6 @@ export default class LocationParser extends CommentsParser {
     if (code !== undefined) {
       err.code = code;
     }
-    console.error(err.stack);
     throw err;
   }
 }
